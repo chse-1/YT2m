@@ -11,19 +11,31 @@ cookies_path = os.path.join(os.getcwd(), "cookies.txt")
 
 # 從環境變數讀取 SFTP 連線資訊
 SF_L = os.getenv("SF_L", "")
+SF_L2 = os.getenv("SF_L2", "")
 
 if not SF_L:
     print("❌ 環境變數 SF_L 未設置")
     exit(1)
 
+if not SF_L2:
+    print("❌ 環境變數 SF_L2 未設置")
+    exit(1)
+
 # 解析 SFTP URL
 parsed_url = urlparse(SF_L)
+parsed_url2 = urlparse(SF_L2)
 
 SFTP_HOST = parsed_url.hostname
 SFTP_PORT = parsed_url.port if parsed_url.port else 22  # 預設 SFTP 端口 22
 SFTP_USER = parsed_url.username
 SFTP_PASSWORD = parsed_url.password
 SFTP_REMOTE_DIR = parsed_url.path if parsed_url.path else "/"  # 取得路徑部分
+
+SFTP_HOST2 = parsed_url2.hostname
+SFTP_PORT2 = parsed_url2.port if parsed_url2.port else 22  # 預設 SFTP 端口 22
+SFTP_USER2 = parsed_url2.username
+SFTP_PASSWORD2 = parsed_url2.password
+SFTP_REMOTE_DIR2 = parsed_url2.path if parsed_url2.path else "/"  # 取得路徑部分
 
 # 確保輸出目錄存在
 os.makedirs(output_dir, exist_ok=True)
@@ -80,8 +92,8 @@ header('Location: {m3u8_url}');
             i += 1
 
 def upload_files():
-    """使用 SFTP 上傳 M3U8 檔案"""
-    print("🚀 啟動 SFTP 上傳程序...")
+    """使用 SFTP 上傳 M3U8 檔案到兩個不同的遠端伺服器"""
+    print("🚀 啟動 SFTP 上傳程序到第一個伺服器...")
     try:
         
         transport = paramiko.Transport((SFTP_HOST, SFTP_PORT))
@@ -113,6 +125,39 @@ def upload_files():
 
     except Exception as e:
         print(f"❌ SFTP 上傳失敗: {e}")
+
+    print("🚀 啟動 SFTP 上傳程序到第二個伺服器...")
+    try:
+        
+        transport2 = paramiko.Transport((SFTP_HOST2, SFTP_PORT2))
+        transport2.connect(username=SFTP_USER2, password=SFTP_PASSWORD2)
+        sftp2 = paramiko.SFTPClient.from_transport(transport2)
+
+        print(f"✅ 成功連接到 SFTP：{SFTP_HOST2}")
+
+        # 確保遠端目錄存在
+        try:
+            sftp2.chdir(SFTP_REMOTE_DIR2)
+        except IOError:
+            print(f"📁 遠端目錄 {SFTP_REMOTE_DIR2} 不存在，正在創建...")
+            sftp2.mkdir(SFTP_REMOTE_DIR2)
+            sftp2.chdir(SFTP_REMOTE_DIR2)
+
+        # 上傳所有檔案
+        for file in os.listdir(output_dir):
+            local_path = os.path.join(output_dir, file)
+            remote_path = os.path.join(SFTP_REMOTE_DIR2, file)
+            print(f"Local file: {local_path}")
+            if os.path.isfile(local_path):
+                print(f"⬆️ 上傳 {local_path} → {remote_path}")
+                sftp2.put(local_path, remote_path)
+
+        sftp2.close()
+        transport2.close()
+        print("✅ SFTP2 上傳完成！")
+
+    except Exception as e:
+        print(f"❌ SFTP2 上傳失敗: {e}")
 
 if __name__ == "__main__":
     decode_and_save_cookies()  # 解碼並保存 cookies.txt
