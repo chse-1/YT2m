@@ -21,6 +21,7 @@ if not SF_L:
 if not SF_L2:
     print("❌ 環境變數 SF_L2 未設置")
     exit(1)
+
 if not SF_L3:
     print("❌ 環境變數 SF_L3 未設置")
     exit(1)
@@ -54,7 +55,14 @@ os.makedirs(output_dir, exist_ok=True)
 def decode_and_save_cookies():
     """解碼並保存 cookies.txt"""
     yt_cookies_b64 = os.getenv("YT_COOKIE_B64")
-    
+    if yt_cookies_b64:
+        with open(cookies_path, "wb") as f:
+            f.write(base64.b64decode(yt_cookies_b64))
+        print("✅ cookies.txt 已生成")
+    else:
+        print("❌ 環境變數 YT_COOKIE_B64 未設置")
+        exit(1)
+
 def grab(youtube_url):
     """使用 yt-dlp 解析 M3U8 連結"""
     yt_dlp_cmd = f"yt-dlp --geo-bypass --cookies cookies.txt --sleep-requests 1 --limit-rate 500k --retries 5 --fragment-retries 10 --no-warnings --quiet --no-check-certificate --no-playlist -g {youtube_url}"
@@ -103,10 +111,9 @@ header('Location: {m3u8_url}');
             i += 1
 
 def upload_files():
-    """使用 SFTP 上傳 M3U8 檔案到兩個不同的遠端伺服器"""
+    """使用 SFTP 上傳 M3U8 檔案到三個不同的遠端伺服器"""
     print("🚀 啟動 SFTP 上傳程序到第一個伺服器...")
     try:
-        
         transport = paramiko.Transport((SFTP_HOST, SFTP_PORT))
         transport.connect(username=SFTP_USER, password=SFTP_PASSWORD)
         sftp = paramiko.SFTPClient.from_transport(transport)
@@ -139,7 +146,6 @@ def upload_files():
 
     print("🚀 啟動 SFTP 上傳程序到第二個伺服器...")
     try:
-        
         transport2 = paramiko.Transport((SFTP_HOST2, SFTP_PORT2))
         transport2.connect(username=SFTP_USER2, password=SFTP_PASSWORD2)
         sftp2 = paramiko.SFTPClient.from_transport(transport2)
@@ -169,10 +175,9 @@ def upload_files():
 
     except Exception as e:
         print(f"❌ SFTP2 上傳失敗: {e}")
-        
+
     print("🚀 啟動 SFTP 上傳程序到第三個伺服器...")
     try:
-        
         transport3 = paramiko.Transport((SFTP_HOST3, SFTP_PORT3))
         transport3.connect(username=SFTP_USER3, password=SFTP_PASSWORD3)
         sftp3 = paramiko.SFTPClient.from_transport(transport3)
@@ -198,7 +203,7 @@ def upload_files():
 
         sftp3.close()
         transport3.close()
-        print("✅ SFTP3上傳完成！")
+        print("✅ SFTP3 上傳完成！")
 
     except Exception as e:
         print(f"❌ SFTP3 上傳失敗: {e}")
