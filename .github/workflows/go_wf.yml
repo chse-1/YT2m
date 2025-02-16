@@ -12,7 +12,7 @@ jobs:
       SF_L: ${{ secrets.SF_L }}  # 設定環境變數 SF_L，來自 GitHub Secrets
       SF_L2: ${{ secrets.SF_L2 }}  # 設定環境變數 SF_L2，來自 GitHub Secrets
       SF_L3: ${{ secrets.SF_L3 }}  # 設定環境變數 SF_L3，來自 GitHub Secrets
-      YT_COOKIE_B64: ${{ secrets.YT_COOKIE_B64 }}  # 設定環境變數 SF_L3，來自 GitHub Secrets
+      YT_COOKIE_B64: ${{ secrets.YT_COOKIE_B64 }}  # 設定環境變數 YT_COOKIE_B64，來自 GitHub Secrets
 
     steps:
       # Checkout the repository
