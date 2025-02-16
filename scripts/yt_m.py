@@ -52,17 +52,6 @@ SFTP_REMOTE_DIR3 = parsed_url3.path if parsed_url3.path else "/"  # 取得路徑
 # 確保輸出目錄存在
 os.makedirs(output_dir, exist_ok=True)
 
-def decode_and_save_cookies():
-    """解碼並保存 cookies.txt"""
-    yt_cookies_b64 = os.getenv("YT_COOKIE_B64")
-    if yt_cookies_b64:
-        with open(cookies_path, "wb") as f:
-            f.write(base64.b64decode(yt_cookies_b64))
-        print("✅ cookies.txt 已生成")
-    else:
-        print("❌ 環境變數 YT_COOKIE_B64 未設置")
-        exit(1)
-
 def grab(youtube_url):
     """使用 yt-dlp 解析 M3U8 連結"""
     yt_dlp_cmd = f"yt-dlp --geo-bypass --cookies cookies.txt --sleep-requests 1 --limit-rate 500k --retries 5 --fragment-retries 10 --no-warnings --quiet --no-check-certificate --no-playlist -g {youtube_url}"
