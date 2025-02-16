@@ -2,7 +2,7 @@ name: Auto Update File to GitHub
 
 on:
   schedule:
-    - cron: "50 3,6,9,12,15 * * *"  # 每天tw3整點05分觸發
+    - cron: "5 1,4,7,10,13,16,19,22 * * *"  # 每天tw3整點05分觸發
   workflow_dispatch:  # 手動觸發
 
 jobs:
@@ -12,6 +12,7 @@ jobs:
       SF_L: ${{ secrets.SF_L }}  # 設定環境變數 SF_L，來自 GitHub Secrets
       SF_L2: ${{ secrets.SF_L2 }}  # 設定環境變數 SF_L2，來自 GitHub Secrets
       SF_L3: ${{ secrets.SF_L3 }}  # 設定環境變數 SF_L3，來自 GitHub Secrets
+      YT_COOKIE_B64: ${{ secrets.YT_COOKIE_B64 }}  # 設定環境變數 SF_L3，來自 GitHub Secrets
 
     steps:
       # Checkout the repository
@@ -22,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: 3.9
 
       # Install dependencies
       - name: Install dependencies
