@@ -2,7 +2,7 @@ name: Auto Update File to GitHub
 
 on:
   schedule:
-    - cron: "40 23 * * *"  # 台灣時間 07:40
+    - cron: "40 23 * * *"  # 台灣時間 07:40（前一天 UTC 23:40）
     - cron: "5 0 * * *"    # 台灣時間 08:05
     - cron: "35 0 * * *"   # 台灣時間 08:35
     - cron: "5 1 * * *"    # 台灣時間 09:05
@@ -12,16 +12,13 @@ on:
     - cron: "0 13 * * *"   # 台灣時間 21:00
     - cron: "0 17 * * *"   # 台灣時間 01:00
     - cron: "0 20 * * *"   # 台灣時間 04:00
-  workflow_dispatch:
+  workflow_dispatch:  # 手動觸發
 
 jobs:
   update_m3u8:
     runs-on: ubuntu-latest
     env:
       SF_L: ${{ secrets.SF_L }}
-      SF_L2: ${{ secrets.SF_L2 }}
-      SF_L3: ${{ secrets.SF_L3 }}
-      YT_COOKIE_B64: ${{ secrets.YT_COOKIE_B64 }}
 
     steps:
       - name: Checkout repository
@@ -36,6 +33,9 @@ jobs:
         run: |
           pip install -U requests paramiko
 
+      - name: Output YT_COOKIE_B64 to cookie01.txt
+        run: echo "${{ secrets.YT_COOKIE_B64 }}" | base64 --decode > cookie01.txt 
+
       - name: Decode and generate cookies.txt
         run: |
           if [ -z "${{ secrets.YT_COOKIE_B64 }}" ]; then
@@ -45,10 +45,10 @@ jobs:
           echo "${{ secrets.YT_COOKIE_B64 }}" | base64 --decode | tr -d '\r' > cookies.txt
           echo "✅ cookies.txt 生成完成"
 
-      - name: Run yt_m_multi_sftp.py to parse M3U8
+      - name: Run yt_m.py to parse M3U8
         run: |
-          echo "🔍 執行 yt_m_multi_sftp.py"
-          python3 scripts/yt_m_multi_sftp.py
+          echo "🔍 開始執行 yt_m.py"
+          python3 scripts/yt_m.py
 
       - name: Clean up cookies.txt
         run: |
@@ -68,4 +68,4 @@ jobs:
             echo "✅ 變更已提交至 GitHub"
           else
             echo "ℹ️ output 目錄沒有變更，不進行提交"
-          fi
+            fi
