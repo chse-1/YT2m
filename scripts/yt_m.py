@@ -53,16 +53,37 @@ SFTP_REMOTE_DIR3 = parsed_url3.path if parsed_url3.path else "/"  # 取得路徑
 os.makedirs(output_dir, exist_ok=True)
 
 def grab(youtube_url):
-    """使用 yt-dlp 解析 M3U8 連結"""
-    yt_dlp_cmd = f"yt-dlp --geo-bypass --cookies cookies.txt --sleep-requests 1 --limit-rate 500k --retries 5 --fragment-retries 10 --no-warnings --quiet --no-check-certificate --no-playlist -g {youtube_url}"
+    """從網頁原始碼中解析 M3U8 連結"""
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    cookies = {}
+    if os.path.exists(cookies_path):
+        try:
+            with open(cookies_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if not line.startswith('#') and '\t' in line:
+                        parts = line.strip().split('\t')
+                        if len(parts) >= 6:
+                            cookies[parts[5]] = parts[6]
+        except Exception as e:
+            print(f"⚠️ Cookie 讀取失敗: {e}")
+
     try:
-        result = subprocess.run(yt_dlp_cmd, shell=True, capture_output=True, text=True, check=True)
-        m3u8_url = result.stdout.strip()
-        if m3u8_url.startswith("http"):
-            return m3u8_url
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️ yt-dlp 解析失敗，錯誤訊息: {e.stderr}")
-    return "https://raw.githubusercontent.com/chse-1/YT2m/main/assets/no_s.m3u8"  # 預設無訊號M3U8
+        res = requests.get(youtube_url, headers=headers, cookies=cookies, timeout=10)
+        html = res.text
+        m3u8_matches = re.findall(r'https://[^"]+\.m3u8', html)
+
+        for url in m3u8_matches:
+            if "googlevideo.com" in url:
+                return url
+
+        print("⚠️ 未找到有效的 .m3u8 連結")
+    except Exception as e:
+        print(f"⚠️ 抓取頁面失敗: {e}")
+
+    return "https://raw.githubusercontent.com/jz168k/YT2m/main/assets/no_s.m3u8"
 
 def process_yt_info():
     """解析 yt_info.txt 並生成 M3U8 和 PHP 檔案"""
